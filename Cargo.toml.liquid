@@ -1,0 +1,14 @@
+[package]
+name = "{{project-name}}"
+description = "A simple Charms app"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+
+[dependencies]
+charms-sdk = { version = "0.1.0" }
+
+[profile.release]
+lto = "fat"
+opt-level = "s"
+strip = "symbols"

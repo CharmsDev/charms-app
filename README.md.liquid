@@ -1,0 +1,21 @@
+This is a [Charms](charms.dev) app.
+
+It is a simple fungible token managed by a reference NFT. The NFT has a state that specifies the remaining total supply of the tokens available to mint. If you control the NFT, you can mint new tokens.
+
+Build with:
+```sh
+charms app build
+```
+
+The resulting RISC-V binary will show up at
+`./target/elf-compilation/riscv32im-succinct-zkvm-elf/release/{{project-name}}` (as well as `./elf/riscv32im-succinct-zkvm-elf`).
+
+Get the verification key for the app with:
+```sh
+charms app vk
+```
+
+Produce the app proof for a spell with:
+```sh
+charms app prove <spell.yaml >proof.bin
+```
