@@ -15,7 +15,14 @@ Get the verification key for the app with:
 charms app vk
 ```
 
+Put the VK into appropriate app specs in your spell sources (e.g. `./spells/send.yaml`):
+```yaml
+apps:
+  $TOKEN_MAN: n/312de6129de1a2a3de9dd22bca0bbb351853e7a5b4acb4b48676816055f08bb1:0/<VK>
+  $TOKEN: t/312de6129de1a2a3de9dd22bca0bbb351853e7a5b4acb4b48676816055f08bb1:0/<VK>
+```
+
 Test the app for a spell with:
 ```sh
-charms app run <./spells/send.yml
+charms app run <./spells/send.yaml
 ```
