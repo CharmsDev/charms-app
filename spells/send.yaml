@@ -1,23 +1,27 @@
 version: 0
 
 apps:
-  $TOKEN_MAN: n/312de6129de1a2a3de9dd22bca0bbb351853e7a5b4acb4b48676816055f08bb1:0/f1430f46c2a4ad6c64927e5a0c9c6364619a293ac2216709213a3742a426b415
-  $TOKEN: t/312de6129de1a2a3de9dd22bca0bbb351853e7a5b4acb4b48676816055f08bb1:0/f1430f46c2a4ad6c64927e5a0c9c6364619a293ac2216709213a3742a426b415
+  $00: n/${app_id}/${app_vk}
+  $01: t/${app_id}/${app_vk}
 
 ins:
-  - utxo_id: db094547cea83ff571e73bb750cc6e8225485c0b65929d723324dd03e4542477:0
-    charm:
-      $TOKEN_MAN: 30580
-      $TOKEN: 69420
+  - utxo_id: ${in_utxo_0}
+    charms:
+      $01: 69420
+
+  - utxo_id: ${in_utxo_1}
+    charms:
+      $00: 30580
 
 outs:
-  - charm:
-      $TOKEN_MAN: 30580
+  - address: ${addr_0}
+    charms:
+      $00: 30580
+      $01: 420
 
-  - charm: {}
+  - address: ${addr_1}
+    charms: {}
 
-  - charm:
-      $TOKEN: 69000
-
-  - charm:
-      $TOKEN: 420
+  - address: ${addr_2}
+    charms:
+      $01: 69000

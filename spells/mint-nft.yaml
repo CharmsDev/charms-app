@@ -1,12 +1,16 @@
 version: 0
 
 apps:
-  $TOKEN_MAN: n/312de6129de1a2a3de9dd22bca0bbb351853e7a5b4acb4b48676816055f08bb1:0/f1430f46c2a4ad6c64927e5a0c9c6364619a293ac2216709213a3742a426b415
+  $00: n/${app_id}/${app_vk}
+
+private_inputs:
+  $00: "${in_utxo_0}"
 
 ins:
-  - utxo_id: 312de6129de1a2a3de9dd22bca0bbb351853e7a5b4acb4b48676816055f08bb1:0
-    charm: {}
+  - utxo_id: ${in_utxo_0}
+    charms: {}
 
 outs:
-  - charm:
-      $TOKEN_MAN: 100000
+  - address: ${addr_0}
+    charms:
+      $00: 100000
