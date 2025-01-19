@@ -14,11 +14,12 @@ pub fn app_contract(app: &App, tx: &Transaction, x: &Data, w: &Data) -> bool {
         TOKEN => {
             check!(token_contract_satisfied(app, tx))
         }
-        _ => unreachable!(),
+        _ => todo!(), // implement if your app needs other functionality than NFTs or fungible tokens
     }
     true
 }
 
+// TODO replace with your own logic
 fn nft_contract_satisfied(app: &App, tx: &Transaction, w: &Data) -> bool {
     let token_app = &App {
         tag: TOKEN,
@@ -57,6 +58,7 @@ pub(crate) fn hash(data: &str) -> B32 {
     B32(hash.into())
 }
 
+// TODO replace with your own logic
 fn token_contract_satisfied(token_app: &App, tx: &Transaction) -> bool {
     check!(token_amounts_balanced(token_app, tx) || can_mint_token(token_app, tx));
     true
