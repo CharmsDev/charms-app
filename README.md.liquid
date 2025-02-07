@@ -1,4 +1,4 @@
-This is a [Charms](charms.dev) app.
+This is a [Charms](https://charms.dev) app.
 
 It is a simple fungible token managed by a reference NFT. The NFT has a state that specifies the remaining total supply of the tokens available to mint. If you control the NFT, you can mint new tokens.
 
@@ -17,7 +17,11 @@ charms app vk
 
 Test the app with a simple NFT mint example:
 
+NOTE: this assumes `bitcoind` running and the `bitcoin-cli` command available and able to talk to `bitcoind`.
+
 ```sh
+alias b=bitcoin-cli
+
 export app_vk=$(charms app vk)
 
 # set to a UTXO you're spending to mint the NFT (you can see what you have by `b listunspent`)
