@@ -1,8 +1,14 @@
 use charms_sdk::data::{
-    check, nft_state_preserved, sum_token_amount, token_amounts_balanced, App, Data, Transaction,
-    UtxoId, B32, NFT, TOKEN,
+    app_datas, check, sum_token_amount, App, Data, Transaction, UtxoId, B32, NFT, TOKEN,
 };
+use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct NftContent {
+    pub ticker: String,
+    pub remaining: u64,
+}
 
 pub fn app_contract(app: &App, tx: &Transaction, x: &Data, w: &Data) -> bool {
     let empty = Data::empty();
@@ -14,7 +20,7 @@ pub fn app_contract(app: &App, tx: &Transaction, x: &Data, w: &Data) -> bool {
         TOKEN => {
             check!(token_contract_satisfied(app, tx))
         }
-        _ => todo!(), // implement if your app needs other functionality than NFTs or fungible tokens
+        _ => unreachable!(),
     }
     true
 }
@@ -26,14 +32,15 @@ fn nft_contract_satisfied(app: &App, tx: &Transaction, w: &Data) -> bool {
         identity: app.identity.clone(),
         vk: app.vk.clone(),
     };
-    check!(
-        nft_state_preserved(app, tx) || can_mint_nft(app, tx, w) || can_mint_token(&token_app, tx)
-    );
+    check!(can_mint_nft(app, tx, w) || can_mint_token(&token_app, tx));
     true
 }
 
 fn can_mint_nft(nft_app: &App, tx: &Transaction, w: &Data) -> bool {
-    let w_str: String = w.value().unwrap();
+    let w_str: Option<String> = w.value().ok();
+
+    check!(w_str.is_some());
+    let w_str = w_str.unwrap();
 
     // can only mint an NFT with this contract if the hash of `w` is the identity of the NFT.
     check!(hash(&w_str) == nft_app.identity);
@@ -42,14 +49,12 @@ fn can_mint_nft(nft_app: &App, tx: &Transaction, w: &Data) -> bool {
     let w_utxo_id = UtxoId::from_str(&w_str).unwrap();
     check!(tx.ins.iter().any(|(utxo_id, _)| utxo_id == &w_utxo_id));
 
-    // can mint no more than one NFT.
-    check!(
-        tx.outs
-            .iter()
-            .filter(|&charms| charms.iter().any(|(app, _)| app == nft_app))
-            .count()
-            == 1
-    );
+    let nft_charms = app_datas(nft_app, tx.outs.iter()).collect::<Vec<_>>();
+
+    // can mint exactly one NFT.
+    check!(nft_charms.len() == 1);
+    // the NFT has the correct structure.
+    check!(nft_charms[0].value::<NftContent>().is_ok());
     true
 }
 
@@ -60,7 +65,7 @@ pub(crate) fn hash(data: &str) -> B32 {
 
 // TODO replace with your own logic
 fn token_contract_satisfied(token_app: &App, tx: &Transaction) -> bool {
-    check!(token_amounts_balanced(token_app, tx) || can_mint_token(token_app, tx));
+    check!(can_mint_token(token_app, tx));
     true
 }
 
@@ -71,37 +76,33 @@ fn can_mint_token(token_app: &App, tx: &Transaction) -> bool {
         vk: token_app.vk.clone(),
     };
 
-    let Some(incoming_supply): Option<u64> = tx
-        .ins
-        .iter()
-        .find_map(|(_, charms)| charms.get(&nft_app).cloned())
-        .and_then(|data| data.value().ok())
+    let Some(nft_content): Option<NftContent> =
+        app_datas(&nft_app, tx.ins.values()).find_map(|data| data.value().ok())
     else {
-        eprintln!("could not determine incoming supply");
+        eprintln!("could not determine incoming remaining supply");
         return false;
     };
+    let incoming_supply = nft_content.remaining;
 
-    let Some(outgoing_supply): Option<u64> = tx
-        .outs
-        .iter()
-        .find_map(|charms| charms.get(&nft_app).cloned())
-        .and_then(|data| data.value().ok())
+    let Some(nft_content): Option<NftContent> =
+        app_datas(&nft_app, tx.outs.iter()).find_map(|data| data.value().ok())
     else {
-        eprintln!("could not determine outgoing supply");
+        eprintln!("could not determine outgoing remaining supply");
         return false;
     };
+    let outgoing_supply = nft_content.remaining;
 
     if !(incoming_supply >= outgoing_supply) {
-        eprintln!("incoming supply must be greater than or equal to outgoing supply");
+        eprintln!("incoming remaining supply must be >= outgoing remaining supply");
         return false;
     }
 
     let Some(input_token_amount) = sum_token_amount(&token_app, tx.ins.values()).ok() else {
-        eprintln!("could not determine input token amount");
+        eprintln!("could not determine input total token amount");
         return false;
     };
     let Some(output_token_amount) = sum_token_amount(&token_app, tx.outs.iter()).ok() else {
-        eprintln!("could not determine output token amount");
+        eprintln!("could not determine output total token amount");
         return false;
     };
 
