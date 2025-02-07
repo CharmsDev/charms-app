@@ -4,7 +4,7 @@ use charms_sdk::data::{
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 pub struct NftContent {
     pub ticker: String,
     pub remaining: u64,
@@ -76,21 +76,25 @@ fn can_mint_token(token_app: &App, tx: &Transaction) -> bool {
         vk: token_app.vk.clone(),
     };
 
-    let Some(nft_content): Option<NftContent> =
+    let Some(nft_content_in): Option<NftContent> =
         app_datas(&nft_app, tx.ins.values()).find_map(|data| data.value().ok())
     else {
         eprintln!("could not determine incoming remaining supply");
         return false;
     };
-    let incoming_supply = nft_content.remaining;
+    let incoming_supply = nft_content_in.remaining;
 
-    let Some(nft_content): Option<NftContent> =
+    let Some(nft_content_out): Option<NftContent> =
         app_datas(&nft_app, tx.outs.iter()).find_map(|data| data.value().ok())
     else {
         eprintln!("could not determine outgoing remaining supply");
         return false;
     };
-    let outgoing_supply = nft_content.remaining;
+    let outgoing_supply = nft_content_out.remaining;
+
+    let mut expected_nft_content_out = nft_content_in.clone();
+    expected_nft_content_out.remaining = outgoing_supply; // only the remaining supply can change.
+    check!(nft_content_out == expected_nft_content_out);
 
     if !(incoming_supply >= outgoing_supply) {
         eprintln!("incoming remaining supply must be >= outgoing remaining supply");
