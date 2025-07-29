@@ -1,10 +1,10 @@
 use charms_sdk::data::{
-    app_datas, check, sum_token_amount, App, Data, Transaction, UtxoId, B32, NFT, TOKEN,
+    charm_values, check, sum_token_amount, App, Data, Transaction, UtxoId, B32, NFT, TOKEN,
 };
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
-#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NftContent {
     pub ticker: String,
     pub remaining: u64,
@@ -49,7 +49,7 @@ fn can_mint_nft(nft_app: &App, tx: &Transaction, w: &Data) -> bool {
     let w_utxo_id = UtxoId::from_str(&w_str).unwrap();
     check!(tx.ins.iter().any(|(utxo_id, _)| utxo_id == &w_utxo_id));
 
-    let nft_charms = app_datas(nft_app, tx.outs.iter()).collect::<Vec<_>>();
+    let nft_charms = charm_values(nft_app, tx.outs.iter()).collect::<Vec<_>>();
 
     // can mint exactly one NFT.
     check!(nft_charms.len() == 1);
@@ -76,32 +76,29 @@ fn can_mint_token(token_app: &App, tx: &Transaction) -> bool {
         vk: token_app.vk.clone(),
     };
 
-    let Some(nft_content_in): Option<NftContent> =
-        app_datas(&nft_app, tx.ins.values()).find_map(|data| data.value().ok())
+    let Some(nft_content): Option<NftContent> =
+        charm_values(&nft_app, tx.ins.iter().map(|(_, v)| v)).find_map(|data| data.value().ok())
     else {
         eprintln!("could not determine incoming remaining supply");
         return false;
     };
-    let incoming_supply = nft_content_in.remaining;
+    let incoming_supply = nft_content.remaining;
 
-    let Some(nft_content_out): Option<NftContent> =
-        app_datas(&nft_app, tx.outs.iter()).find_map(|data| data.value().ok())
+    let Some(nft_content): Option<NftContent> =
+        charm_values(&nft_app, tx.outs.iter()).find_map(|data| data.value().ok())
     else {
         eprintln!("could not determine outgoing remaining supply");
         return false;
     };
-    let outgoing_supply = nft_content_out.remaining;
-
-    let mut expected_nft_content_out = nft_content_in.clone();
-    expected_nft_content_out.remaining = outgoing_supply; // only the remaining supply can change.
-    check!(nft_content_out == expected_nft_content_out);
+    let outgoing_supply = nft_content.remaining;
 
     if !(incoming_supply >= outgoing_supply) {
         eprintln!("incoming remaining supply must be >= outgoing remaining supply");
         return false;
     }
 
-    let Some(input_token_amount) = sum_token_amount(&token_app, tx.ins.values()).ok() else {
+    let Some(input_token_amount) = sum_token_amount(&token_app, tx.ins.iter().map(|(_, v)| v)).ok()
+    else {
         eprintln!("could not determine input total token amount");
         return false;
     };
