@@ -1,22 +1,19 @@
 version: 11
 
-apps:
-  $00: n/${app_id}/${app_vk}
-  $01: t/${app_id}/${app_vk}
-
-ins:
-  - utxo_id: ${in_utxo_1}
-    charms:
-      $00:
-        ticker: {{project-name | upcase}}
-        remaining: 100000
-
-outs:
-  - address: ${addr_1}
-    charms:
-      $01: 69420
-  - address: ${addr_2}
-    charms:
-      $00:
+tx:
+  ins:
+    - ${in_utxo_1}
+  outs:
+    - 1: 69420
+    - 0:
         ticker: {{project-name | upcase}}
         remaining: 30580
+  coins:
+    - amount: ${amount_1}
+      dest: ${dest_1}
+    - amount: ${amount_2}
+      dest: ${dest_2}
+
+app_public_inputs:
+  n/${app_id}/${app_vk}: ~
+  t/${app_id}/${app_vk}: ~

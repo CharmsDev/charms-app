@@ -1,18 +1,16 @@
 version: 11
 
-apps:
-  $01: t/${app_id}/${app_vk}
+tx:
+  ins:
+    - ${in_utxo_1}
+  outs:
+    - 0: 420
+    - 0: 69000
+  coins:
+    - amount: ${amount_3}
+      dest: ${dest_3}
+    - amount: ${amount_4}
+      dest: ${dest_4}
 
-ins:
-  - utxo_id: ${in_utxo_1}
-    charms:
-      $01: 69420
-
-outs:
-  - address: ${addr_3}
-    charms:
-      $01: 420
-
-  - address: ${addr_4}
-    charms:
-      $01: 69000
+app_public_inputs:
+  t/${app_id}/${app_vk}: ~

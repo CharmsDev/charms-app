@@ -1,18 +1,15 @@
 version: 11
 
-apps:
-  $00: n/${app_id}/${app_vk}
-
-private_inputs:
-  $00: "${in_utxo_0}"
-
-ins:
-  - utxo_id: ${in_utxo_0}
-    charms: {}
-
-outs:
-  - address: ${addr_0}
-    charms:
-      $00:
+tx:
+  ins:
+    - ${in_utxo_0}
+  outs:
+    - 0:
         ticker: {{project-name | upcase}}
         remaining: 100000
+  coins:
+    - amount: ${amount_0}
+      dest: ${dest_0}
+
+app_public_inputs:
+  n/${app_id}/${app_vk}: ~
